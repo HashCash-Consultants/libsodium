@@ -43,17 +43,11 @@ echo
 
 env - PATH="$PATH" \
     "$MAKE_TOOLCHAIN" --force --api="$NDK_API_VERSION_COMPAT" \
-    --arch="$ARCH" --install-dir="$TOOLCHAIN_DIR" || exit 1
-
-if [ -z "$LIBSODIUM_FULL_BUILD" ]; then
-  export LIBSODIUM_ENABLE_MINIMAL_FLAG="--enable-minimal"
-else
-  export LIBSODIUM_ENABLE_MINIMAL_FLAG=""
-fi
+    --unified-headers --arch="$ARCH" --install-dir="$TOOLCHAIN_DIR" || exit 1
 
 ./configure \
     --disable-soname-versions \
-    ${LIBSODIUM_ENABLE_MINIMAL_FLAG} \
+    --enable-minimal \
     --host="${HOST_COMPILER}" \
     --prefix="${PREFIX}" \
     --with-sysroot="${TOOLCHAIN_DIR}/sysroot" || exit 1
@@ -65,11 +59,11 @@ if [ "$NDK_PLATFORM" != "$NDK_PLATFORM_COMPAT" ]; then
   echo
   env - PATH="$PATH" \
       "$MAKE_TOOLCHAIN" --force --api="$NDK_API_VERSION" \
-      --arch="$ARCH" --install-dir="$TOOLCHAIN_DIR" || exit 1
+      --unified-headers --arch="$ARCH" --install-dir="$TOOLCHAIN_DIR" || exit 1
 
   ./configure \
       --disable-soname-versions \
-      ${LIBSODIUM_ENABLE_MINIMAL_FLAG} \
+      --enable-minimal \
       --host="${HOST_COMPILER}" \
       --prefix="${PREFIX}" \
       --with-sysroot="${TOOLCHAIN_DIR}/sysroot" || exit 1
@@ -83,10 +77,6 @@ if [ "$NDK_PLATFORM" != "$NDK_PLATFORM_COMPAT" ]; then
   rm -f config-def.log config-def-compat.log
 fi
 
-
-NPROCESSORS=$(getconf NPROCESSORS_ONLN 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)
-PROCESSORS=${NPROCESSORS:-3}
-
 make clean && \
-make -j${PROCESSORS} install && \
+make -j3 install && \
 echo "libsodium has been installed into ${PREFIX}"
